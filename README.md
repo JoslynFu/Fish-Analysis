@@ -3,10 +3,10 @@
 
 ## Team Members:
 
-- full name, github handle
-- full name, github handle
+- Joclyn Fu, JoslynFu
+- Phoebe Goulden, phoebeca
 
-This repository is a template for your team's repository.
+This project explores data on global fishery collapse.
 
 ## assignment
 
