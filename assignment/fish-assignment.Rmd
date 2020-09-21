@@ -1,5 +1,7 @@
 ---
+Title: Overfishing
 output: github_document
+Author: Joslyn Fu & Phoebe Goulden
 ---
 
 ```{r include = FALSE}
