@@ -28,6 +28,7 @@ loading it.
 ```{r message = FALSE}
 library("tidyverse")
 library("readxl")
+library("ramlegacy")
 ```
 
 ## Reading in the tables
@@ -37,24 +38,38 @@ to do this step more than once, Travis will need this code to be able to reprodu
 unless you choose to push the datafiles up to git. 
 
 ```{r}
-excel_version <- "RLSADB v4.44/DB Files With Assessment Data/RLSADB v4.44 (assessment data only).xlsx"
-if(!file.exists(excel_version)){
-  download.file("https://zenodo.org/record/2542919/files/RLSADB%20v4.44.zip?download=1",
-                "ramlegacy.zip")
-unzip("ramlegacy.zip") 
-}
+download_ramlegacy(overwrite = TRUE)
 ```
 
 ```{r}
-sheets <- readxl::excel_sheets(excel_version) #use the readxl package to identify sheet names 
-ram <- lapply(sheets, readxl::read_excel, path = excel_version)  #read the data from all 3 sheets into a list
-names(ram) <- sheets # give the list of datatables their assigned sheet names
+ram <- ramlegacy::load_ramlegacy(tables = c("timeseries", "stock", "area", "tsmetrics"))
 
-## check your names
-names(ram)
+```
 
-## check your data
-head(ram$area)
+```{r}
+ram$timeseries
+```
+
+```{r}
+fish = 
+  ram$timeseries %>%
+  left_join(ram$stock, by = "stockid") %>%
+  left_join(ram$tsmetrics, by = c("tsid" = "tsunique"))
+```
+
+
+```{r}
+fish %>% distinct() 
+```
+
+```{r}
+fish %>% filter(scientificname == "Gadus morhua") %>% select(-commonname)  %>% distinct() %>%
+ggplot(aes(tsyear, tsvalue)) + geom_line()
+```
+
+```{r}
+fish 
+```
 
 ```
 
