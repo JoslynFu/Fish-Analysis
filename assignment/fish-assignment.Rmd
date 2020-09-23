@@ -28,6 +28,8 @@ loading it.
 ```{r message = FALSE}
 library("tidyverse")
 library("readxl")
+#install a helper package to download data
+install.packages("ramlegacy")
 library("ramlegacy")
 ```
 
@@ -43,7 +45,6 @@ download_ramlegacy(overwrite = TRUE)
 
 ```{r}
 ram <- ramlegacy::load_ramlegacy(tables = c("timeseries", "stock", "area", "tsmetrics"))
-
 ```
 
 ```{r}
@@ -51,8 +52,7 @@ ram$timeseries
 ```
 
 ```{r}
-fish = 
-  ram$timeseries %>%
+fish <- ram$timeseries %>%
   left_join(ram$stock, by = "stockid") %>%
   left_join(ram$tsmetrics, by = c("tsid" = "tsunique"))
 ```
@@ -63,23 +63,11 @@ fish %>% distinct()
 ```
 
 ```{r}
-fish %>% filter(scientificname == "Gadus morhua") %>% select(-commonname)  %>% distinct() %>%
-ggplot(aes(tsyear, tsvalue)) + geom_line()
+cod <- fish %>% 
+  filter(scientificname == "Gadus morhua") %>% select(-commonname)      %>% distinct() 
+ggplot(cod, aes(tsyear, tsvalue)) + geom_line()
 ```
 
-```{r}
-fish 
-```
-
-```
-
-Side Note: You may notice the `lapply` function above. This function applies a given function
-(in this case "read_excel") to all elements in a vector or list. This is the same 
-as writing out read_excel for all the sheets contained in our file, or writing
-a for loop `for(i in 1:length(sheets)){read_excel(sheets[i])}`. These are very powerful
-functions we will learn more about later. For now, it's enough to recognize why we
-have used it here. You can find more info in [Chapter 21 of the R4ds
-book](http://r4ds.had.co.nz/iteration.html). 
 
 # Exercise 1: Investigating the North-Atlantic Cod
 
