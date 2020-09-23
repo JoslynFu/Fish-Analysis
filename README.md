@@ -1,5 +1,5 @@
 
-*add travis-ci badge here*
+![Reproducibility](https://github.com/espm-157/fish-module-fu-goulden/workflows/Reproducibility/badge.svg)
 
 ## Team Members:
 
