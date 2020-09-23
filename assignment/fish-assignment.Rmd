@@ -7,15 +7,6 @@ Author: Joslyn Fu & Phoebe Goulden
 ```{r include = FALSE}
 knitr::opts_chunk$set(message = FALSE)
 ```
-# Unit 3: Fisheries Collapse Module
-
-This module will focus on understanding and replicating 
-fisheries stock assessment data and fisheries collapse. 
-
-Instead of working with independent dataframes, we will be working with a large
-relational database which contains many different tables of different sizes and 
-shapes, but that all all related to eachother through a series of different ids.
-
 
 ## The Database
 We will use data from the [RAM Legacy Stock Assessment Database](https://doi.org/10.5281/zenodo.2542918)
@@ -39,11 +30,13 @@ ram <- ramlegacy::load_ramlegacy(tables = c("timeseries", "stock", "area", "tsme
 ```
 
 ```{r}
+#join the 3 data tables we need
 fish <- ram$timeseries %>%
   left_join(ram$stock, by = "stockid") %>%
   left_join(ram$tsmetrics, by = c("tsid" = "tsunique"))
 ```
 
+# Investigating the Decline of the North-Atlantic Cod
 
 ```{r}
 #filter out only cod
@@ -61,13 +54,13 @@ canada_cod_MT %>%
 ```
 
 
-# Exercise 1: Investigating the North-Atlantic Cod
 
-Now we are ready to dive into our data.  First, We seek to replicate the following 
-figure from the Millenium Ecosystem Assessment Project using the RAM data. 
+
+Below is a similar figure from the Millenium Ecosystem Assessment Project using the RAM data. 
 
 ![](http://espm-157.carlboettiger.info/img/cod.jpg)
 
+Our graph has a similar shape as the one above, reflecting the collapse of the Canada East Coast cod fishery around 1992. However, our values are much greater than in the orginal graph because we plotted total catch per year rather than total landings. The landing value is the number of fish brought back to the dock, whereas total catch is all fish caught. Total catch is a much larger value since many unwanted fish are thrown back before reaching shore.
 
 
 **How does your graph compare to the one presented above?**
@@ -82,8 +75,13 @@ figure from the Millenium Ecosystem Assessment Project using the RAM data.
 We seek to replicate the temporal trend in stock declines shown in [Worm et al 2006](http://doi.org/10.1126/science.1132294):
 
 ![](http://espm-157.carlboettiger.info/img/worm2006.jpg)
-
-
+```{r}
+fish %>% 
+  filter(tsid == "TCbest-MT", region == "Canada East Coast") %>%
+  group_by(tsyear, scientificname) %>% 
+  summarise(total_catch = sum(tsvalue)) %>% 
+  filter(scientificname == "Gadus morhua")
+```
 
 
 
