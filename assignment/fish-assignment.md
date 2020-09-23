@@ -1,26 +1,17 @@
----
-Title: Overfishing
-output: github_document
-Author: Joslyn Fu & Phoebe Goulden
----
 
-```{r include = FALSE}
-knitr::opts_chunk$set(message = FALSE)
-```
-# Unit 3: Fisheries Collapse Module
+Unit 3: Fisheries Collapse Module
+=================================
 
-This module will focus on understanding and replicating 
-fisheries stock assessment data and fisheries collapse. 
+This module will focus on understanding and replicating fisheries stock assessment data and fisheries collapse.
 
-Instead of working with independent dataframes, we will be working with a large
-relational database which contains many different tables of different sizes and 
-shapes, but that all all related to eachother through a series of different ids.
+Instead of working with independent dataframes, we will be working with a large relational database which contains many different tables of different sizes and shapes, but that all all related to eachother through a series of different ids.
 
+The Database
+------------
 
-## The Database
 We will use data from the [RAM Legacy Stock Assessment Database](https://doi.org/10.5281/zenodo.2542918)
 
-```{r message = FALSE}
+``` r
 library("tidyverse")
 library("readxl")
 #install a helper package to download data first
@@ -28,24 +19,23 @@ library("readxl")
 library("ramlegacy")
 ```
 
-```{r}
+``` r
 #download and unzip files
 #overwrite = TRUE gets most updated version
 download_ramlegacy(overwrite = TRUE)
 ```
 
-```{r}
+``` r
 ram <- ramlegacy::load_ramlegacy(tables = c("timeseries", "stock", "area", "tsmetrics"))
 ```
 
-```{r}
+``` r
 fish <- ram$timeseries %>%
   left_join(ram$stock, by = "stockid") %>%
   left_join(ram$tsmetrics, by = c("tsid" = "tsunique"))
 ```
 
-
-```{r}
+``` r
 #filter out only cod
 cod <- fish %>% 
   filter(scientificname == "Gadus morhua") %>% select(-commonname)       %>% distinct() 
@@ -60,30 +50,25 @@ canada_cod_MT %>%
   ggplot(aes(tsyear, total_catch)) + geom_line()
 ```
 
+![](fish-assignment_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
-# Exercise 1: Investigating the North-Atlantic Cod
+Exercise 1: Investigating the North-Atlantic Cod
+================================================
 
-Now we are ready to dive into our data.  First, We seek to replicate the following 
-figure from the Millenium Ecosystem Assessment Project using the RAM data. 
+Now we are ready to dive into our data. First, We seek to replicate the following figure from the Millenium Ecosystem Assessment Project using the RAM data.
 
 ![](http://espm-157.carlboettiger.info/img/cod.jpg)
 
-
-
 **How does your graph compare to the one presented above?**
 
-------
+------------------------------------------------------------------------
 
+Exercise 2: Group Assignment
+============================
 
-# Exercise 2: Group Assignment
-
-## Stock Collapses
+Stock Collapses
+---------------
 
 We seek to replicate the temporal trend in stock declines shown in [Worm et al 2006](http://doi.org/10.1126/science.1132294):
 
 ![](http://espm-157.carlboettiger.info/img/worm2006.jpg)
-
-
-
-
-
