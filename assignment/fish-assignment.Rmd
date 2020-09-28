@@ -1,12 +1,15 @@
 ---
-Title: Overfishing
+title: Examining Fishery Collapse
+author: Joslyn Fu & Phoebe Goulden
 output: github_document
-Author: Joslyn Fu & Phoebe Goulden
 ---
 
 ```{r include = FALSE}
 knitr::opts_chunk$set(message = FALSE)
 ```
+
+This project examines current data (1950 to present) on overfishing and fishery collapse. We compare our results to findings in the Worm et al. (2006) paper which first reported on fishery collapse and its implications for biodiversity.
+
 
 ## The Database
 We will use data from the [RAM Legacy Stock Assessment Database](https://doi.org/10.5281/zenodo.2542918)
@@ -51,7 +54,7 @@ canada_cod_MT <- cod %>%
   summarise(total_catch = sum(tsvalue)) 
 
 canada_cod_MT %>%
-  ggplot(aes(tsyear, total_catch)) + geom_line()
+  ggplot(aes(tsyear, total_catch)) + geom_line(color = "blue") + theme_light() + labs(x = "Years", y = "Total Catch (MT)", title = "Trend in Cod Catch on the Canada East Coast")
 ```
 
 
@@ -61,8 +64,19 @@ Below is a similar figure from the Millenium Ecosystem Assessment Project using 
 
 ![](http://espm-157.carlboettiger.info/img/cod.jpg)
 
-Our graph has a similar shape as the one above, reflecting the collapse of the Canada East Coast cod fishery around 1992. However, our values are much greater than in the orginal graph because we plotted total catch per year rather than total landings. The landing value is the number of fish brought back to the dock, whereas total catch is all fish caught. Total catch is a much larger value since many unwanted fish are thrown back before reaching shore.
+Our graph has a similar shape as the one above, reflecting the collapse of the Canada East Coast cod fishery around 1992. However, our values are much greater than in the orginal graph because we plotted total catch per year rather than total landings. The landing value is the number of fish brought back to the dock, whereas total catch is all fish caught. Total catch is a much larger value since many unwanted fish are thrown back before reaching shore. Additionally, we used data for the entire Canada East Coast, which includes 10 subregions.
 
+```{r}
+fish %>% filter(scientificname == "Gadus morhua", region == "Canada East Coast") %>% count(areaname)
+
+fish %>% 
+  filter(tsid == "TCbest-MT", region == "Canada East Coast") %>%
+  group_by(tsyear, scientificname, areaid) %>% 
+  summarise(total_catch = sum(tsvalue, na.rm=TRUE)) %>% 
+  filter(scientificname == "Gadus morhua") %>%
+  ggplot(aes(tsyear, total_catch, col = areaid)) + 
+  geom_line()
+```
 
 **How does your graph compare to the one presented above?**
 
@@ -80,13 +94,17 @@ We seek to replicate the temporal trend in stock declines shown in [Worm et al 2
 fish %>% 
   filter(tsid == "TCbest-MT", region == "Canada East Coast") %>%
   group_by(tsyear, scientificname) %>% 
-  summarise(total_catch= sum(tsvalue, rm.na =TRUE), total_catch < .10*cummax(tsvalue)) %>%
-  filter(scientificname == "Gadus morhua")
+  summarise(total_catch = sum(tsvalue), total_catch < .10*cummax(tsvalue)) %>%
+  filter(scientificname == "Gadus morhua") 
 
 ```
 
 ```{r}
-fish %>% filter(scientificname == "Gadus morhua") %>% count(areaname)
-
+#fish %>% filter(scientificname == "Gadus morhua") %>% count(areaname)
+#fish %>% 
+ # filter(tsid == "TCbest-MT", region == "Canada East Coast") %>%
+  #group_by(tsyear, scientificname) %>% 
+  #summarize(runmax()) %>%
+ # filter(scientificname == "Gadus morhua") 
 ```
 

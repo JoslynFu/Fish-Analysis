@@ -1,10 +1,8 @@
+Examining Fishery Collapse
+================
+Joslyn Fu & Phoebe Goulden
 
-Unit 3: Fisheries Collapse Module
-=================================
-
-This module will focus on understanding and replicating fisheries stock assessment data and fisheries collapse.
-
-Instead of working with independent dataframes, we will be working with a large relational database which contains many different tables of different sizes and shapes, but that all all related to eachother through a series of different ids.
+This project examines current data (1950 to present) on overfishing and fishery collapse. We compare our results to findings in the Worm et al. (2006) paper which first reported on fishery collapse and its implications for biodiversity.
 
 The Database
 ------------
@@ -30,10 +28,15 @@ ram <- ramlegacy::load_ramlegacy(tables = c("timeseries", "stock", "area", "tsme
 ```
 
 ``` r
+#join the 3 data tables we need
 fish <- ram$timeseries %>%
   left_join(ram$stock, by = "stockid") %>%
-  left_join(ram$tsmetrics, by = c("tsid" = "tsunique"))
+  left_join(ram$tsmetrics, by = c("tsid" = "tsunique")) %>%
+  left_join(ram$area, by = "areaid")
 ```
+
+Investigating the Decline of the North-Atlantic Cod
+===================================================
 
 ``` r
 #filter out only cod
@@ -47,17 +50,44 @@ canada_cod_MT <- cod %>%
   summarise(total_catch = sum(tsvalue)) 
 
 canada_cod_MT %>%
-  ggplot(aes(tsyear, total_catch)) + geom_line()
+  ggplot(aes(tsyear, total_catch)) + geom_line(color = "blue") + theme_light() + labs(x = "Years", y = "Total Catch (MT)", title = "Trend in Cod Catch on the Canada East Coast")
 ```
 
 ![](fish-assignment_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
-Exercise 1: Investigating the North-Atlantic Cod
-================================================
-
-Now we are ready to dive into our data. First, We seek to replicate the following figure from the Millenium Ecosystem Assessment Project using the RAM data.
+Below is a similar figure from the Millenium Ecosystem Assessment Project using the RAM data.
 
 ![](http://espm-157.carlboettiger.info/img/cod.jpg)
+
+Our graph has a similar shape as the one above, reflecting the collapse of the Canada East Coast cod fishery around 1992. However, our values are much greater than in the orginal graph because we plotted total catch per year rather than total landings. The landing value is the number of fish brought back to the dock, whereas total catch is all fish caught. Total catch is a much larger value since many unwanted fish are thrown back before reaching shore. Additionally, we used data for the entire Canada East Coast, which includes 10 subregions.
+
+``` r
+fish %>% filter(scientificname == "Gadus morhua", region == "Canada East Coast") %>% count(areaname)
+```
+
+    ##                                                 areaname    n
+    ## 1                                  Eastern Scotian Shelf  201
+    ## 2                                            Flemish Cap  419
+    ## 3                                           Georges Bank  497
+    ## 4                          Northern Gulf of St. Lawrence  899
+    ## 5                                   Southern Grand Banks  292
+    ## 6                          Southern Gulf of St. Lawrence 1063
+    ## 7                 Southern Labrador-Eastern Newfoundland 3064
+    ## 8                                        St. Pierre Bank  822
+    ## 9                                  Western Scotian Shelf  448
+    ## 10 Western Scotian Shelf, Bay of Fundy and Gulf of Maine  359
+
+``` r
+fish %>% 
+  filter(tsid == "TCbest-MT", region == "Canada East Coast") %>%
+  group_by(tsyear, scientificname, areaid) %>% 
+  summarise(total_catch = sum(tsvalue, na.rm=TRUE)) %>% 
+  filter(scientificname == "Gadus morhua") %>%
+  ggplot(aes(tsyear, total_catch, col = areaid)) + 
+  geom_line()
+```
+
+![](fish-assignment_files/figure-markdown_github/unnamed-chunk-7-1.png)
 
 **How does your graph compare to the one presented above?**
 
@@ -72,3 +102,36 @@ Stock Collapses
 We seek to replicate the temporal trend in stock declines shown in [Worm et al 2006](http://doi.org/10.1126/science.1132294):
 
 ![](http://espm-157.carlboettiger.info/img/worm2006.jpg)
+
+``` r
+fish %>% 
+  filter(tsid == "TCbest-MT", region == "Canada East Coast") %>%
+  group_by(tsyear, scientificname) %>% 
+  summarise(total_catch = sum(tsvalue), total_catch < .10*cummax(tsvalue)) %>%
+  filter(scientificname == "Gadus morhua") 
+```
+
+    ## # A tibble: 882 x 4
+    ## # Groups:   tsyear, scientificname [165]
+    ##    tsyear scientificname total_catch `total_catch < 0.1 * cummax(tsvalue)`
+    ##     <dbl> <chr>                <dbl> <lgl>                                
+    ##  1   1850 Gadus morhua        133000 FALSE                                
+    ##  2   1851 Gadus morhua        125000 FALSE                                
+    ##  3   1852 Gadus morhua        120000 FALSE                                
+    ##  4   1853 Gadus morhua        117000 FALSE                                
+    ##  5   1854 Gadus morhua        104000 FALSE                                
+    ##  6   1855 Gadus morhua        132000 FALSE                                
+    ##  7   1856 Gadus morhua        151000 FALSE                                
+    ##  8   1857 Gadus morhua        169000 FALSE                                
+    ##  9   1858 Gadus morhua        134000 FALSE                                
+    ## 10   1859 Gadus morhua        154000 FALSE                                
+    ## # … with 872 more rows
+
+``` r
+#fish %>% filter(scientificname == "Gadus morhua") %>% count(areaname)
+#fish %>% 
+ # filter(tsid == "TCbest-MT", region == "Canada East Coast") %>%
+  #group_by(tsyear, scientificname) %>% 
+  #summarize(runmax()) %>%
+ # filter(scientificname == "Gadus morhua") 
+```
