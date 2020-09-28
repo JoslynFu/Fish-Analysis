@@ -33,7 +33,8 @@ ram <- ramlegacy::load_ramlegacy(tables = c("timeseries", "stock", "area", "tsme
 #join the 3 data tables we need
 fish <- ram$timeseries %>%
   left_join(ram$stock, by = "stockid") %>%
-  left_join(ram$tsmetrics, by = c("tsid" = "tsunique"))
+  left_join(ram$tsmetrics, by = c("tsid" = "tsunique")) %>%
+  left_join(ram$area, by = "areaid")
 ```
 
 # Investigating the Decline of the North-Atlantic Cod
@@ -79,9 +80,13 @@ We seek to replicate the temporal trend in stock declines shown in [Worm et al 2
 fish %>% 
   filter(tsid == "TCbest-MT", region == "Canada East Coast") %>%
   group_by(tsyear, scientificname) %>% 
-  summarise(total_catch = sum(tsvalue)) %>% 
+  summarise(total_catch= sum(tsvalue, rm.na =TRUE), total_catch < .10*cummax(tsvalue)) %>%
   filter(scientificname == "Gadus morhua")
+
 ```
 
+```{r}
+fish %>% filter(scientificname == "Gadus morhua") %>% count(areaname)
 
+```
 
