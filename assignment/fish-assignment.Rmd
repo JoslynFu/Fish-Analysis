@@ -38,7 +38,9 @@ fish <- ram$timeseries %>%
   left_join(ram$stock, by = "stockid") %>%
   left_join(ram$tsmetrics, by = c("tsid" = "tsunique")) %>%
   left_join(ram$area, by = "areaid")
+
 ```
+
 
 # Investigating the Decline of the North-Atlantic Cod
 
@@ -109,9 +111,11 @@ fish %>%
  # filter(scientificname == "Gadus morhua") 
 ```
 
+
+We include only the data before 2008 because the later record of catches is incomplete.
 ```{r}
 collapse <- fish %>%
-  filter(tsid == "TCbest-MT") %>%
+  filter(tsid == "TCbest-MT", tsyear < 2008) %>%
   group_by(tsyear, scientificname) %>% 
   summarise(total_catch = sum(tsvalue, na.rm = TRUE)) %>%
   group_by(scientificname) %>%
@@ -122,19 +126,27 @@ collapse <- fish %>%
 collapse
 ```
 
+
 ```{r}
-collapse %>%
-  group_by(tsyear) %>%
-  summarise(total_collapse = sum(current_collapse), cumulative_collase = sum(ever_collapsed)) 
-  
+total_species = collapse %>%
+  filter(tsyear < 2008) %>%
+  select(tsyear, scientificname) %>%
+  count(tsyear) 
+
+total_species %>% arrange(desc (n))
+
+
   
 ```
 
 
-
 ```{r}
-fish  %>%
-  filter(tsyear == "1922") %>%
-  count(scientificname) 
+collapse %>%
+  group_by(tsyear) %>%
+  summarise(total_collapse = sum(current_collapse), cumulative_collase = sum(ever_collapsed)) %>%
+  pivot_longer(-tsyear) %>%
+  ggplot(aes(x = tsyear, y = value, color = name)) + geom_point() + ggtitle("Percent Species Collapsed") + xlab("Year") + ylab("Species Collapsed")
+  
+
 ```
 
