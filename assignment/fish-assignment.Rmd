@@ -69,6 +69,7 @@ Our graph has a similar shape as the one above, reflecting the collapse of the C
 ```{r}
 fish %>% filter(scientificname == "Gadus morhua", region == "Canada East Coast") %>% count(areaname)
 
+
 fish %>% 
   filter(tsid == "TCbest-MT", region == "Canada East Coast") %>%
   group_by(tsyear, scientificname, areaid) %>% 
@@ -106,5 +107,32 @@ fish %>%
   #group_by(tsyear, scientificname) %>% 
   #summarize(runmax()) %>%
  # filter(scientificname == "Gadus morhua") 
+```
+
+```{r}
+collapse <- fish %>%
+  filter(tsid == "TCbest-MT") %>%
+  group_by(tsyear, scientificname) %>% 
+  summarise(total_catch = sum(tsvalue, na.rm = TRUE)) %>%
+  group_by(scientificname) %>%
+  mutate(current_collapse = total_catch < 0.10 * cummax(total_catch),
+         ever_collapsed = cumsum(current_collapse) > 0) %>%
+  ungroup()
+
+collapse
+```
+
+```{r}
+collapse %>%
+  group_by(tsyear) %>%
+  summarise(total_collapse = sum(current_collapse), cumulative_collase = sum(ever_collapsed)) 
+  
+  
+```
+
+```{r}
+fish  %>%
+  filter(tsyear == "1922") %>%
+  count(scientificname) 
 ```
 
