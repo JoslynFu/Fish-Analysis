@@ -81,39 +81,27 @@ fish %>%
   geom_line()
 ```
 
-**How does your graph compare to the one presented above?**
 
 ------
 
-
-# Exercise 2: Group Assignment
 
 ## Stock Collapses
 
 We seek to replicate the temporal trend in stock declines shown in [Worm et al 2006](http://doi.org/10.1126/science.1132294):
 
 ![](http://espm-157.carlboettiger.info/img/worm2006.jpg)
+In the above figure, triangles represent cumlative species collapse and diamonds represents collapses in each year. For each, collapse is defined as catches falling below 10% of the recorded maximum.
+
 ```{r}
 fish %>% 
-  filter(tsid == "TCbest-MT", region == "Canada East Coast") %>%
-  group_by(tsyear, scientificname) %>% 
-  summarise(total_catch = sum(tsvalue), total_catch < .10*cummax(tsvalue)) %>%
-  filter(scientificname == "Gadus morhua") 
-
-```
-
-```{r}
-#fish %>% filter(scientificname == "Gadus morhua") %>% count(areaname)
-#fish %>% 
- # filter(tsid == "TCbest-MT", region == "Canada East Coast") %>%
-  #group_by(tsyear, scientificname) %>% 
-  #summarize(runmax()) %>%
- # filter(scientificname == "Gadus morhua") 
+  filter(tscategory == "TOTAL BIOMASS") %>%
+  group_by(tsyear, stockid) 
 ```
 
 
-We include only the data before 2008 because the later record of catches is incomplete.
+We include only the data before 2008 in our analysis because the later record of catches is incomplete. Collapse is defined as total catch falling below 10% of the previous maximum total catch, measured in metric tons.
 ```{r}
+#calculates whether or not species has collapsed in each year, and whether it has ever collapsed
 collapse <- fish %>%
   filter(tsid == "TCbest-MT", tsyear < 2008) %>%
   group_by(tsyear, scientificname) %>% 
@@ -122,31 +110,76 @@ collapse <- fish %>%
   mutate(current_collapse = total_catch < 0.10 * cummax(total_catch),
          ever_collapsed = cumsum(current_collapse) > 0) %>%
   ungroup()
-
-collapse
 ```
 
 
 ```{r}
+#328 is total number of species we have data on
 total_species = collapse %>%
   filter(tsyear < 2008) %>%
   select(tsyear, scientificname) %>%
   count(tsyear) 
 
 total_species %>% arrange(desc (n))
-
-
-  
 ```
 
 
 ```{r}
-collapse %>%
+#sums collapses in each year
+totals_collapsed <- collapse %>%
   group_by(tsyear) %>%
-  summarise(total_collapse = sum(current_collapse), cumulative_collase = sum(ever_collapsed)) %>%
+  summarise(total_collapse = sum(current_collapse), cumulative_collapse = sum(ever_collapsed)) %>%
+  ungroup()
+
+#divide by total number of species to get a percent
+percent_collapsed <- totals_collapsed %>% 
+  group_by(tsyear) %>%
+  summarise(percent_collapsed_year = (total_collapse/328)*100, percent_collapsed_cumulative = (cumulative_collapse/328)*100)
+
+percent_collapsed %>%  
   pivot_longer(-tsyear) %>%
-  ggplot(aes(x = tsyear, y = value, color = name)) + geom_point() + ggtitle("Percent Species Collapsed") + xlab("Year") + ylab("Species Collapsed")
-  
+  ggplot(aes(x = tsyear, y = value, color = name)) + geom_point() + ggtitle("Fishery Collapse Over Time") + xlab("Year") + ylab("% Species Collapsed") + labs(color = "Legend") + scale_y_reverse() + theme_light()
 
 ```
+Our graph, while not an exact replica of the Worm et al. 2006 figure, shows the same trend in stock declines. Around 1900, there appears to have been a large increase in fishing, resulting in a steep increase in collapsed species.
+
+```{r}
+#repeat analysis using stockid instead of scientificname
+collapsed_stock <- fish %>%
+  filter(tsid == "TCbest-MT", tsyear < 2008) %>%
+  group_by(tsyear, stockid) %>% 
+  summarise(total_catch_stock = sum(tsvalue, na.rm = TRUE)) %>%
+  group_by(stockid) %>%
+  mutate(current_collapse_stock = total_catch_stock < 0.10 * cummax(total_catch_stock),
+         ever_collapsed_stock = cumsum(current_collapse_stock) > 0) %>%
+  ungroup()
+```
+
+```{r}
+#count number of stocks
+total_stock = collapsed_stock %>%
+  filter(tsyear < 2008) %>%
+  select(tsyear, stockid) %>%
+  count(tsyear) %>% arrange(desc (n))
+#total_stock
+#901 total stocks
+```
+
+```{r}
+#sums collapses in each year
+totals_collapsed_stock <- collapsed_stock %>%
+  group_by(tsyear) %>%
+  summarise(total_collapse_stock = sum(current_collapse_stock), cumulative_collapse_stock = sum(ever_collapsed_stock)) %>%
+  ungroup()
+
+#divide by total number of stocks to get a percent
+percent_collapsed_stock <- totals_collapsed_stock %>% 
+  group_by(tsyear) %>%
+  summarise(percent_collapsed_year_stock = (total_collapse_stock/901)*100, percent_collapsed_cumulative_stock = (cumulative_collapse_stock/901)*100)
+
+percent_collapsed_stock %>%  
+  pivot_longer(-tsyear) %>%
+  ggplot(aes(x = tsyear, y = value, color = name)) + geom_point() + ggtitle("Fishery Collapse Over Time") + xlab("Year") + ylab("% Stocks Collapsed") + labs(color = "Legend") + scale_y_reverse() + theme_light() + scale_fill_discrete(labels = c("Cumulative Stock Collapses", "Stock Collapses Per Year"))
+```
+The same analysis using stockid yields a similar trend
 
