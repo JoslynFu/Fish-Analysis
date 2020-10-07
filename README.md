@@ -25,7 +25,7 @@ Our repository also includes:
 
 ### Infrastructure for Testing
 
-- The Repreoducibility badge above shows whether our build is passing. 
+- The Reproducibility badge above shows whether our build is passing. 
 - `DESCRIPTION` a metadata file for the repository, based on the R package standard. It's main purpose here is as a place to list any additional R packages/libraries needed for any of the `.Rmd` files to run.
 - `tests/render_rmds.R` an R script that is run to execute the above described tests, rendering all `.Rmd` notebooks. 
 
