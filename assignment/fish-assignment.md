@@ -59,7 +59,7 @@ Below is a similar figure from the Millenium Ecosystem Assessment Project using 
 
 ![](http://espm-157.carlboettiger.info/img/cod.jpg)
 
-Our graph has a similar shape as the one above, reflecting the collapse of the Canada East Coast cod fishery around 1992. However, our values are much greater than in the orginal graph because we plotted total catch per year rather than total landings. The landing value is the number of fish brought back to the dock, whereas total catch is all fish caught. Total catch is a much larger value since many unwanted fish are thrown back before reaching shore. Additionally, we used data for the entire Canada East Coast, which includes 10 subregions.
+Our graph has a similar shape as the one above, reflecting the collapse of the Canada East Coast cod fishery around 1992. However, our values are much greater than in the orginal graph because we plotted total catch per year rather than total landings. The landing value is the number of fish brought back to the dock, whereas total catch is all fish caught. Total catch is a much larger value since many unwanted fish are thrown back before reaching shore. Additionally, we used data for the entire Canada East Coast, which includes 10 subregions, shown in the table below.
 
 ``` r
 fish %>% filter(scientificname == "Gadus morhua", region == "Canada East Coast") %>% count(areaname)
@@ -77,52 +77,16 @@ fish %>% filter(scientificname == "Gadus morhua", region == "Canada East Coast")
     ## 9                                  Western Scotian Shelf  448
     ## 10 Western Scotian Shelf, Bay of Fundy and Gulf of Maine  359
 
-``` r
-fish %>% 
-  filter(tsid == "TCbest-MT", region == "Canada East Coast") %>%
-  group_by(tsyear, scientificname, areaid) %>% 
-  summarise(total_catch = sum(tsvalue, na.rm=TRUE)) %>% 
-  filter(scientificname == "Gadus morhua") %>%
-  ggplot(aes(tsyear, total_catch, col = areaid)) + 
-  geom_line()
-```
-
-![](fish-assignment_files/figure-markdown_github/unnamed-chunk-7-1.png)
-
 ------------------------------------------------------------------------
 
 Stock Collapses
----------------
+===============
 
 We seek to replicate the temporal trend in stock declines shown in [Worm et al 2006](http://doi.org/10.1126/science.1132294):
 
-![](http://espm-157.carlboettiger.info/img/worm2006.jpg) In the above figure, triangles represent cumlative species collapse and diamonds represents collapses in each year. For each, collapse is defined as catches falling below 10% of the recorded maximum.
+![](http://espm-157.carlboettiger.info/img/worm2006.jpg)
 
-``` r
-fish %>% 
-  filter(tscategory == "TOTAL BIOMASS") %>%
-  group_by(tsyear, stockid) 
-```
-
-    ## # A tibble: 255,227 x 24
-    ## # Groups:   tsyear, stockid [38,508]
-    ##    assessid stockid stocklong.x tsid  tsyear tsvalue tsn   scientificname
-    ##    <chr>    <chr>   <chr>       <chr>  <dbl>   <dbl> <chr> <chr>         
-    ##  1 ADFG-CS… CSALMA… Chum Salmo… TN-E…   1962  648000 " 16… Oncorhynchus …
-    ##  2 ADFG-CS… CSALMA… Chum Salmo… TN-E…   1963  541000 " 16… Oncorhynchus …
-    ##  3 ADFG-CS… CSALMA… Chum Salmo… TN-E…   1964  540000 " 16… Oncorhynchus …
-    ##  4 ADFG-CS… CSALMA… Chum Salmo… TN-E…   1965  425000 " 16… Oncorhynchus …
-    ##  5 ADFG-CS… CSALMA… Chum Salmo… TN-E…   1966  577000 " 16… Oncorhynchus …
-    ##  6 ADFG-CS… CSALMA… Chum Salmo… TN-E…   1967  252000 " 16… Oncorhynchus …
-    ##  7 ADFG-CS… CSALMA… Chum Salmo… TN-E…   1968  313000 " 16… Oncorhynchus …
-    ##  8 ADFG-CS… CSALMA… Chum Salmo… TN-E…   1969  192000 " 16… Oncorhynchus …
-    ##  9 ADFG-CS… CSALMA… Chum Salmo… TN-E…   1970  657000 " 16… Oncorhynchus …
-    ## 10 ADFG-CS… CSALMA… Chum Salmo… TN-E…   1971  845000 " 16… Oncorhynchus …
-    ## # … with 255,217 more rows, and 16 more variables: commonname <chr>,
-    ## #   areaid <chr>, stocklong.y <chr>, region <chr>, inmyersdb <chr>,
-    ## #   myersstockid <chr>, tscategory <chr>, tsshort <chr>, tslong <chr>,
-    ## #   tsunitsshort <chr>, tsunitslong <chr>, country <chr>, areatype <chr>,
-    ## #   areacode <chr>, areaname <chr>, alternateareaname <chr>
+In the above figure, triangles represent cumlative species collapse and diamonds represents collapses in each year. For each, collapse is defined as catches falling below 10% of the recorded maximum.
 
 We include only the data before 2008 in our analysis because the later record of catches is incomplete. Collapse is defined as total catch falling below 10% of the previous maximum total catch, measured in metric tons.
 
@@ -137,6 +101,8 @@ collapse <- fish %>%
          ever_collapsed = cumsum(current_collapse) > 0) %>%
   ungroup()
 ```
+
+To calculate the percent of species collapsed, we first found the largest value for number of species in a single year. We considered this value to be the total number of species included in the dataset. We chose this over species in each year because data was not collected or recorded for every species each year. This variation would lead to misleading calculations, since the percentage depends on the number of species in each year.
 
 ``` r
 #328 is total number of species we have data on
@@ -180,7 +146,14 @@ percent_collapsed %>%
   ggplot(aes(x = tsyear, y = value, color = name)) + geom_point() + ggtitle("Fishery Collapse Over Time") + xlab("Year") + ylab("% Species Collapsed") + labs(color = "Legend") + scale_y_reverse() + theme_light()
 ```
 
-![](fish-assignment_files/figure-markdown_github/unnamed-chunk-11-1.png) Our graph, while not an exact replica of the Worm et al. 2006 figure, shows the same trend in stock declines. Around 1900, there appears to have been a large increase in fishing, resulting in a steep increase in collapsed species.
+![](fish-assignment_files/figure-markdown_github/unnamed-chunk-10-1.png)
+
+Our graph, while not an exact replica of the Worm et al. 2006 figure, shows the same trend in stock declines. The red dots represent the cumulative percent of collapsed species, while the blue dots are the percent collapsed in each year. Around 1900, there appears to have been a large increase in fishing, resulting in a steep increase in collapsed species. The main difference between our graph and that of Worm et al. is that our values for percent collapsed species are much lower. This could be due to our use of newer, more complete data than was available to Worm et al. It is also possible that our calculations of percent collapse differ.
+
+Compare to results using "stockid"
+----------------------------------
+
+We then repeated our analysis using "stockid" instead of "scientificname" to see if the observed trend holds using a different fish identifier.
 
 ``` r
 #repeat analysis using stockid instead of scientificname
@@ -193,6 +166,8 @@ collapsed_stock <- fish %>%
          ever_collapsed_stock = cumsum(current_collapse_stock) > 0) %>%
   ungroup()
 ```
+
+Here, we used the same reasoning to calculate percent stock collapsed, finding the largest number of stocks in a single year and using this value as our total number of stocks.
 
 ``` r
 #count number of stocks
@@ -221,4 +196,11 @@ percent_collapsed_stock %>%
   ggplot(aes(x = tsyear, y = value, color = name)) + geom_point() + ggtitle("Fishery Collapse Over Time") + xlab("Year") + ylab("% Stocks Collapsed") + labs(color = "Legend") + scale_y_reverse() + theme_light() + scale_fill_discrete(labels = c("Cumulative Stock Collapses", "Stock Collapses Per Year"))
 ```
 
-![](fish-assignment_files/figure-markdown_github/unnamed-chunk-14-1.png) The same analysis using stockid yields a similar trend
+![](fish-assignment_files/figure-markdown_github/unnamed-chunk-13-1.png)
+
+The same analysis using stockid yields a similar trend: stock collapses begin accelerating around the year 1900. This graph, however, shows a smoother trend than analysis based on "scientificname". We infer that this is due to differing fishing trends and regulations in different areas, which make trends in catch in any given area more stable than over the entire globe. The "stockid" label combines both species and location, whereas "scientificname" considers the species as a whole, which may recover in some areas while still being overfished in others.
+
+Conclusion
+==========
+
+This analysis of fishery data builds on Worm et al.'s findings and shows that fishery collapse is increasing and significant. Scientific attention should be directed to understanding the reasons behind fishery collapses and preventing future collapses and ecological catastrophe.
